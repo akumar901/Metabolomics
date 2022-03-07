@@ -1,0 +1,32 @@
+pip install pubchempy
+import pandas as pd
+import cirpy
+import pubchempy as pcp
+
+df = pd.read_csv("Name_of_input_file_with_compound_names.csv", usecols = ['Compound_Name'])
+df.head()
+outdf = pd.DataFrame()
+list_inchikey = []
+list_smiles = []
+list_pubchemid = []
+for row in df['Compound_Name']:
+    list_inchikey.append(cirpy.resolve(row,'stdinchikey'))
+    list_smiles.append(cirpy.resolve(row,'smiles'))
+    list_pubchemid.append(pcp.get_cids(row, 'name'))
+    
+outdf['InChiKey'] = list_inchikey
+outdf['SMILES'] = list_smiles
+outdf['PubChemID'] = list_pubchemid
+print(outdf)
+outdf.head() #make sure to check the directory where the output file is saved
+outdf_c = outdf.copy()
+outdf = outdf_c.copy()
+outdf['Compound_Name'] = df['Compound_Name']
+#outdf['InChiKey'] = outdf['InChiKey'].str.replace('InChiKey=', '')
+col_sp = outdf['InChiKey'].str.split('=', expand=True)
+outdf['InChiKey'] =col_sp[1]
+
+outdf['PubChemID'] = outdf['PubChemID'].astype(str).str.replace('[', '')
+outdf['PubChemID'] = outdf['PubChemID'].astype(str).str.replace(']', '')
+outdf.to_excel('sorted_output_ver_1.xlsx', index=False)
+outdf.head()
